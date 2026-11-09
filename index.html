@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OrçaFrio IA</title>
+<style>
+:root{font-family:system-ui,-apple-system,sans-serif;color:#173456;background:#f4f8fd}
+*{box-sizing:border-box}
+body{margin:0}
+header{background:#0755a5;color:white;padding:20px;text-align:center}
+header h1{margin:0;font-size:25px}
+header small{opacity:.9}
+main{max-width:650px;margin:auto;padding:20px 16px 110px}
+.card{background:white;border-radius:16px;padding:18px;margin:12px 0;box-shadow:0 3px 15px #153b6812}
+h2{font-size:21px}
+label{display:block;font-weight:600;margin:12px 0 5px}
+input,select,textarea{width:100%;padding:12px;border:1px solid #c5d4e7;border-radius:9px;font:inherit}
+button{cursor:pointer;border:0;border-radius:10px;padding:12px 15px;background:#0866c6;color:white;font:inherit;font-weight:600}
+.secondary{background:#e7f0fa;color:#064a90}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row button{flex:1}
+.muted{color:#60748b}
+.hidden{display:none!important}
+nav{position:fixed;bottom:0;left:0;right:0;background:white;box-shadow:0 -2px 15px #0002;display:flex;justify-content:space-around;align-items:center;padding:9px 3px max(10px,env(safe-area-inset-bottom))}
+nav button{background:none;color:#46647e;font-size:12px;padding:8px 4px}
+nav button.plus{background:#0866c6;color:white;border-radius:50%;width:57px;height:57px;font-size:31px;margin-top:-28px;box-shadow:0 3px 9px #0003}
+.actions{position:fixed;bottom:86px;left:50%;transform:translateX(-50%);background:white;border-radius:15px;padding:12px;box-shadow:0 5px 24px #0003;display:grid;gap:8px;width:min(280px,90vw)}
+.actions button{text-align:left}
+.pill{display:inline-block;padding:5px 9px;background:#e7f0fa;border-radius:30px;font-size:12px}
+ul{padding-left:20px}
+li{margin:8px 0}
+@media print{
+header,nav,.no-print,.actions{display:none!important}
+main{padding:0}
+.card{box-shadow:none;border:1px solid #ddd}
+}
+</style>
+</head>
+<body>
+
+<header>
+<h1>❄️ OrçaFrio IA</h1>
+<small>Seu orçamento pronto em minutos.</small>
+</header>
+
+<main>
+
+<section id="inicio">
+<h2>Orçamentos recentes</h2>
+<div class="card">
+<p class="muted">Toque no botão + para começar.</p>
+<div id="recentes"></div>
+</div>
+</section>
+
+<section id="clientes" class="hidden">
+<h2>Cadastrar cliente</h2>
+<div class="card">
+<form id="clienteForm">
+<label>Nome do cliente</label>
+<input id="nome" required>
+
+<label>Telefone / WhatsApp</label>
+<input id="telefone" type="tel" required>
+
+<label>Endereço / localização</label>
+<input id="endereco" placeholder="Rua, número, bairro e cidade" required>
+
+<label>Link do mapa (opcional)</label>
+<input id="mapa" type="url" placeholder="https://maps.google.com/...">
+
+<button type="submit" style="margin-top:15px">Salvar cliente</button>
+</form>
+</div>
+
+<div class="card">
+<h3>Clientes cadastrados</h3>
+<div id="listaClientes"></div>
+</div>
+</section>
+
+<section id="orcamento" class="hidden">
+<h2>Novo orçamento</h2>
+<div class="card">
+<form id="orcForm">
+
+<label>Cliente</label>
+<select id="clienteSelecionado" required></select>
+
+<label>Serviço</label>
+<select id="servico">
+<option>Instalação</option>
+<option>Manutenção</option>
+<option>Limpeza</option>
+<option>Higienização</option>
+<option>Recarga de gás</option>
+<option>Detecção de vazamento</option>
+</select>
+
+<label>Descrição</label>
+<textarea id="descricao" rows="3" placeholder="Descreva o serviço"></textarea>
+
+<label>Valor (R$)</label>
+<input id="valor" type="number" min="0" step="0.01" required>
+
+<button type="submit" style="margin-top:15px">Gerar orçamento</button>
+</form>
+</div>
+</section>
+
+<section id="final" class="hidden">
+<h2>Orçamento</h2>
+<div class="card" id="resumo"></div>
+
+<div class="card no-print">
+<div class="row">
+<button onclick="window.print()">Salvar PDF / Imprimir</button>
+<button onclick="enviarWhatsApp()">WhatsApp</button>
+</div>
+
+<p>
+<button class="secondary" onclick="gerarDadosNota()">Gerar dados da nota</button>
+</p>
+
+<div id="dadosNota"></div>
+
+<p class="muted">
+Fotos antes e depois e link compartilhável exigem armazenamento online; ainda não estão ativados.
+</p>
+</div>
+</section>
+
+<section id="precos" class="hidden">
+<h2>Preços por cidade</h2>
+<div class="card">
+<p>Referências de preço mínimo, médio e máximo serão adicionadas após validação dos dados de cada cidade. Nenhum valor é sugerido sem fonte.</p>
+</div>
+</section>
+
+<section id="relatorios" class="hidden">
+<h2>Relatórios</h2>
+<div class="card">
+<p id="totais"></p>
+<p class="muted">Resumo dos orçamentos salvos neste navegador.</p>
+</div>
+</section>
+
+</main>
+
+<div class="actions hidden no-print" id="menuMais">
+<button onclick="novo('Instalação')">Instalação</button>
+<button onclick="novo('Manutenção')">Manutenção</button>
+<button onclick="novo('Limpeza')">Limpeza</button>
+<button onclick="novo('Higienização')">Higienização</button>
+<button onclick="novo('Recarga de gás')">Recarga de gás</button>
+<button onclick="novo('Detecção de vazamento')">Detecção de vazamento</button>
+</div>
+
+<nav class="no-print">
+<button onclick="tela('inicio')">⌂<br>Início</button>
+<button onclick="tela('clientes')">♙<br>Clientes</button>
+<button class="plus" aria-label="Novo orçamento" onclick="document.getElementById('menuMais').classList.toggle('hidden')">+</button>
+<button onclick="tela('precos')">＄<br>Preços</button>
+<button onclick="tela('relatorios')">▤<br>Relatórios</button>
+</nav>
+
+<script>
+const get=k=>JSON.parse(localStorage.getItem(k)||'[]');
+const put=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+let atual=null;
+
+function tela(id){
+document.querySelectorAll('main section').forEach(x=>x.classList.add('hidden'));
+document.getElementById(id).classList.remove('hidden');
+document.getElementById('menuMais').classList.add('hidden');
+atualizar();
+window.scrollTo(0,0);
+}
+
+function atualizar(){
+const clientes=get('of_clientes'),orc=get('of_orc');
+
+document.getElementById('clienteSelecionado').innerHTML=
+'<option value="">Selecione o cliente</option>'+
+clientes.map((c,i)=><option value="${i}">${esc(c.nome)}</option>).join('');
+
+document.getElementById('listaClientes').innerHTML=
+clientes.length?
+clientes.map(c=><p><strong>${esc(c.nome)}</strong><br>${esc(c.telefone)} · ${esc(c.endereco)}</p>).join(''):
+'Nenhum cliente cadastrado.';
+
+document.getElementById('recentes').innerHTML=
+orc.length?
+orc.slice().reverse().map(o=><p><strong>${esc(o.cliente.nome)}</strong> — ${esc(o.servico)}<br>R$ ${Number(o.valor).toFixed(2)} · ${esc(o.data)}</p>).join(''):
+'Nenhum orçamento ainda.';
+
+document.getElementById('totais').textContent=
+${orc.length} orçamento(s) · Total: R$ ${orc.reduce((a,o)=>a+Number(o.valor),0).toFixed(2)};
+}
+
+function esc(s){
+return String(s??'').replace(/[&<>"']/g,c=>({
+'&':'&amp;',
+'<':'&lt;',
+'>':'&gt;',
+'"':'&quot;',
+"'":'&#39;'
+}[c]));
+}
+
+document.getElementById('clienteForm').addEventListener('submit',e=>{
+e.preventDefault();
+const clientes=get('of_clientes');
+clientes.push({
+nome:document.getElementById('nome').value.trim(),
+telefone:document.getElementById('telefone').value.trim(),
+endereco:document.getElementById('endereco').value.trim(),
+mapa:document.getElementById('mapa').value.trim()
+});
+put('of_clientes',clientes);
+e.target.reset();
+tela('orcamento');
+});
+
+function novo(serv){
+if(!get('of_clientes').length){
+alert('Cadastre um cliente primeiro.');
+tela('clientes');
+return;
+}
+tela('orcamento');
+document.getElementById('servico').value=serv;
+}
+
+document.getElementById('orcForm').addEventListener('submit',e=>{
+e.preventDefault();
+
+const c=get('of_clientes')[Number(document.getElementById('clienteSelecionado').value)];
+
+if(!document.getElementById('clienteSelecionado').value || !c){
+alert('Selecione um cliente');
+return;
+}
+
+atual={
+cliente:c,
+servico:document.getElementById('servico').value,
+descricao:document.getElementById('descricao').value,
+valor:Number(document.getElementById('valor').value),
+data:new Date().toLocaleDateString('pt-BR')
+};
+
+const orc=get('of_orc');
+orc.push(atual);
+put('of_orc',orc);
+mostrarResumo();
+tela('final');
+});
+
+function mostrarResumo(){
+if(!atual)return;
+const o=atual;
+
+document.getElementById('resumo').innerHTML=`
+<h3>ORÇAMENTO DE SERVIÇO</h3>
+<p>
+<b>Cliente:</b> ${esc(o.cliente.nome)}<br>
+<b>Telefone:</b> ${esc(o.cliente.telefone)}<br>
+<b>Endereço:</b> ${esc(o.cliente.endereco)}<br>
+<b>Data:</b> ${esc(o.data)}
+</p>
+<hr>
+<p>
+<b>Serviço:</b> ${esc(o.servico)}<br>
+${esc(o.descricao)}
+</p>
+<h2>TOTAL DO ORÇAMENTO: R$ ${o.valor.toFixed(2)}</h2>`;
+}
+
+function enviarWhatsApp(){
+if(!atual)return;
+
+const o=atual;
+const numero=o.cliente.telefone.replace(/\D/g,'');
+
+const msg=`OrçaFrio IA - Orçamento
+Cliente: ${o.cliente.nome}
+Serviço: ${o.servico}
+Descrição: ${o.descricao}
+Total: R$ ${o.valor.toFixed(2)}`;
+
+window.open(
+'https://wa.me/'+
+(numero.length===11||numero.length===10?'55':'')+
+numero+
+'?text='+encodeURIComponent(msg),
+'_blank'
+);
+}
+
+function gerarDadosNota(){
+if(!atual)return;
+
+const o=atual;
+
+document.getElementById('dadosNota').innerHTML=`
+<p>
+<b>Dados para copiar no sistema da prefeitura:</b><br>
+Tomador: ${esc(o.cliente.nome)}<br>
+Contato: ${esc(o.cliente.telefone)}<br>
+Endereço: ${esc(o.cliente.endereco)}<br>
+Serviço: ${esc(o.servico)} — ${esc(o.descricao)}<br>
+Valor: R$ ${o.valor.toFixed(2)}
+</p>
+<small>
+Não é nota fiscal. A prefeitura poderá exigir CPF/CNPJ, código do serviço e outros dados.
+</small>`;
+}
+
+atualizar();
+</script>
+
+</body>
+</html>
