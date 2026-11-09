@@ -184,21 +184,23 @@ const clientes=get('of_clientes'),orc=get('of_orc');
 
 document.getElementById('clienteSelecionado').innerHTML=
 '<option value="">Selecione o cliente</option>'+
-clientes.map((c,i)=><option value="${i}">${esc(c.nome)}</option>).join('');
+clientes.map((c,i)=>`<option value="${i}">${esc(c.nome)}</option>`).join('');
 
 document.getElementById('listaClientes').innerHTML=
 clientes.length?
-clientes.map(c=><p><strong>${esc(c.nome)}</strong><br>${esc(c.telefone)} · ${esc(c.endereco)}</p>).join(''):
+clientes.map(c=>`<p><strong>${esc(c.nome)}</strong><br>${esc(c.telefone)} · ${esc(c.endereco)}</p>`).join(''):
 'Nenhum cliente cadastrado.';
 
 document.getElementById('recentes').innerHTML=
 orc.length?
-orc.slice().reverse().map(o=><p><strong>${esc(o.cliente.nome)}</strong> — ${esc(o.servico)}<br>R$ ${Number(o.valor).toFixed(2)} · ${esc(o.data)}</p>).join(''):
+orc.slice().reverse().map(o=>`<p><strong>${esc(o.cliente.nome)}</strong> — ${esc(o.servico)}<br>R$ ${Number(o.valor).toFixed(2)} · ${esc(o.data)}</p>`).join(''):
 'Nenhum orçamento ainda.';
 
 document.getElementById('totais').textContent=
-${orc.length} orçamento(s) · Total: R$ ${orc.reduce((a,o)=>a+Number(o.valor),0).toFixed(2)};
+`${orc.length} orçamento(s) · Total: R$ ${orc.reduce((a,o)=>a+Number(o.valor),0).toFixed(2)}`;
 }
+
+
 
 function esc(s){
 return String(s??'').replace(/[&<>"']/g,c=>({
