@@ -63,7 +63,8 @@ main{padding:0}
 <form id="clienteForm">
 <label>Nome do cliente</label>
 <input id="nome" required>
-
+<label>CPF ou CNPJ (opcional)</label>
+<input id="cpfcnpj" type="text" placeholder="Digite o CPF ou CNPJ">
 <label>Telefone / WhatsApp</label>
 <input id="telefone" type="tel" required>
 
@@ -219,6 +220,9 @@ e.preventDefault();
 const clientes=get('of_clientes');
 clientes.push({
 nome:document.getElementById('nome').value.trim(),
+
+cpfcnpj:document.getElementById('cpfcnpj').value.trim(),
+
 telefone:document.getElementById('telefone').value.trim(),
 endereco:document.getElementById('endereco').value.trim(),
 mapa:document.getElementById('mapa').value.trim()
