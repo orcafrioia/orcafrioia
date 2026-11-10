@@ -96,23 +96,43 @@ main{padding:0}
 <label>Cliente</label>
 <select id="clienteSelecionado" required></select>
 
-<label>Serviço</label>
-<select id="servico">
-<option>Instalação</option>
-<option>Manutenção</option>
-<option>Limpeza</option>
-<option>Higienização</option>
-<option>Recarga de gás</option>
-<option>Detecção de vazamento</option>
-</select>
 
-<label>Descrição</label>
-<textarea id="descricao" rows="3" placeholder="Descreva o serviço"></textarea>
+<div id="itensOrcamento">
+  <div class="item-orcamento">
+    <label>Serviço</label>
+    <select class="item-servico">
+      <option>Instalação</option>
+      <option>Manutenção</option>
+      <option>Limpeza</option>
+      <option>Higienização</option>
+      <option>Recarga de gás</option>
+      <option>Detecção de vazamento</option>
+    </select>
 
-<label>Valor (R$)</label>
-<input id="valor" type="number" min="0" step="0.01" required>
+    <label>Descrição</label>
+    <textarea class="item-descricao" rows="2"
+      placeholder="Descreva o serviço"></textarea>
 
-<button type="submit" style="margin-top:15px">Gerar orçamento</button>
+    <label>Quantidade</label>
+    <input class="item-quantidade" type="number"
+      min="1" step="1" value="1" required>
+
+    <label>Valor unitário (R$)</label>
+    <input class="item-valor" type="number"
+      min="0" step="0.01" required>
+  </div>
+</div>
+
+<button type="button" class="secondary"
+  onclick="adicionarServico()"
+  style="margin-top:15px">
+  + Adicionar serviço
+</button>
+
+<button type="submit" style="margin-top:15px">
+  Gerar orçamento
+</button>
+
 </form>
 </div>
 </section>
