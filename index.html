@@ -142,7 +142,23 @@ Fotos antes e depois e link compartilhável exigem armazenamento online; ainda n
 <section id="precos" class="hidden">
 <h2>Preços por cidade</h2>
 <div class="card">
-<p>Referências de preço mínimo, médio e máximo serão adicionadas após validação dos dados de cada cidade. Nenhum valor é sugerido sem fonte.</p>
+
+<label>Serviço</label>
+<select id="precoServico">
+  <option>Instalação</option>
+  <option>Manutenção</option>
+  <option>Limpeza</option>
+  <option>Higienização</option>
+  <option>Recarga de gás</option>
+  <option>Detecção de vazamento</option>
+</select>
+
+<label>Valor do serviço (R$)</label>
+<input id="precoValor" type="number" min="0" step="0.01" placeholder="Digite seu preço">
+
+<button type="button" onclick="salvarPreco()" style="margin-top:15px">Salvar preço</button>
+<div id="listaPrecos"></div>
+
 </div>
 </section>
 
@@ -357,6 +373,46 @@ Valor: R$ ${o.valor.toFixed(2)}
 Não é nota fiscal. A prefeitura poderá exigir CPF/CNPJ, código do serviço e outros dados.
 </small>`;
 }
+function salvarPreco() {
+  const servico = document.getElementById('precoServico').value;
+  const campo = document.getElementById('precoValor');
+
+  if (campo.value.trim() === '' || !campo.checkValidity()) {
+    alert('Digite um valor válido.');
+    return;
+  }
+
+  const precos = JSON.parse(localStorage.getItem('of_precos') || '{}');
+  precos[servico] = Number(campo.value);
+
+  localStorage.setItem('of_precos', JSON.stringify(precos));
+  campo.value = '';
+  mostrarPrecos();
+  alert('Preço salvo com sucesso!');
+}
+
+function mostrarPrecos() {
+  const precos = JSON.parse(localStorage.getItem('of_precos') || '{}');
+  const lista = document.getElementById('listaPrecos');
+
+  lista.innerHTML = Object.entries(precos).map(([servico, valor]) => `
+    <p>
+      <strong>${esc(servico)}</strong><br>
+      R$ ${Number(valor).toFixed(2)}<br>
+      <button type="button" class="secondary"
+        onclick="editarPreco('${servico}')">Editar</button>
+    </p>
+  `).join('') || '<p>Nenhum preço cadastrado.</p>';
+}
+
+function editarPreco(servico) {
+  const precos = JSON.parse(localStorage.getItem('of_precos') || '{}');
+  document.getElementById('precoServico').value = servico;
+  document.getElementById('precoValor').value = precos[servico];
+}
+
+mostrarPrecos();
+
 
 atualizar();
 </script>
