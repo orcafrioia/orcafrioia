@@ -178,6 +178,8 @@ const get=k=>JSON.parse(localStorage.getItem(k)||'[]');
 const put=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
 let atual=null;
 
+let editandoCliente=null;
+  
 function tela(id){
 document.querySelectorAll('main section').forEach(x=>x.classList.add('hidden'));
 document.getElementById(id).classList.remove('hidden');
@@ -195,7 +197,9 @@ clientes.map((c,i)=>`<option value="${i}">${esc(c.nome)}</option>`).join('');
 
 document.getElementById('listaClientes').innerHTML=
 clientes.length?
-clientes.map(c=>`<p><strong>${esc(c.nome)}</strong><br>${esc(c.telefone)} · ${esc(c.endereco)}</p>`).join(''):
+
+clientes.map((c,i)=>`<p><strong>${esc(c.nome)}</strong><br>${esc(c.telefone)} · ${esc(c.endereco)}<br><button type="button" class="secondary" onclick="editarCliente(${i})">Editar</button></p>`).join(''):
+
 'Nenhum cliente cadastrado.';
 
 document.getElementById('recentes').innerHTML=
@@ -219,22 +223,56 @@ return String(s??'').replace(/[&<>"']/g,c=>({
 }[c]));
 }
 
+
+});
+
+function editarCliente(i){
+const c=get('of_clientes')[i];
+if(!c)return;
+editandoCliente=i;
+document.getElementById('nome').value=c.nome||'';
+document.getElementById('telefone').value=c.telefone||'';
+document.getElementById('cpfcnpj').value=c.cpfcnpj||'';
+document.getElementById('endereco').value=c.endereco||'';
+document.getElementById('mapa').value=c.mapa||'';
+document.querySelector('#clienteForm button[type="submit"]').textContent='Salvar alterações';
+window.scrollTo(0,0);
+}
+
 document.getElementById('clienteForm').addEventListener('submit',e=>{
 e.preventDefault();
 const clientes=get('of_clientes');
-clientes.push({
+const c={
 nome:document.getElementById('nome').value.trim(),
-
 cpfcnpj:document.getElementById('cpfcnpj').value.trim(),
-
 telefone:document.getElementById('telefone').value.trim(),
 endereco:document.getElementById('endereco').value.trim(),
 mapa:document.getElementById('mapa').value.trim()
-});
+};
+if(editandoCliente!==null){
+clientes[editandoCliente]=c;
+editandoCliente=null;
+}else{
+clientes.push(c);
+}
 put('of_clientes',clientes);
 e.target.reset();
-tela('orcamento');
+document.querySelector('#clienteForm button[type="submit"]').textContent='Salvar cliente';
+tela('clientes');
 });
+
+function editarCliente(i){
+const c=get('of_clientes')[i];
+if(!c)return;
+editandoCliente=i;
+document.getElementById('nome').value=c.nome||'';
+document.getElementById('telefone').value=c.telefone||'';
+document.getElementById('cpfcnpj').value=c.cpfcnpj||'';
+document.getElementById('endereco').value=c.endereco||'';
+document.getElementById('mapa').value=c.mapa||'';
+document.querySelector('#clienteForm button[type="submit"]').textContent='Salvar alterações';
+window.scrollTo(0,0);
+}
 
 function novo(serv){
 if(!get('of_clientes').length){
